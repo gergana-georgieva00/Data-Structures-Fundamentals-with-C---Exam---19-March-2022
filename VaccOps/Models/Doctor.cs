@@ -8,6 +8,7 @@ namespace VaccOps.Models
         {
             this.Name = name;
             this.Popularity = popularity;
+            this.Patients = new List<Patient>();
         }
 
         public string Name { get; set; }

@@ -14,5 +14,6 @@
         public int Height { get; set; }
         public int Age { get; set; }
         public string Town { get; set; }
+        public Doctor Doctor { get; set; }
     }
 }
