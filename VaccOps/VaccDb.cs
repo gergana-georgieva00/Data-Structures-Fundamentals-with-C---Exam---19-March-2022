@@ -8,106 +8,77 @@
 
     public class VaccDb : IVaccOps
     {
-        Dictionary<string, Doctor> patientsByName;
-        Dictionary<string, List<Patient>> doctorsByName;
-        HashSet<Doctor> doctors;
+        private Dictionary<string, Doctor> doctors = new Dictionary<string, Doctor>();
+        private Dictionary<string, Patient> patients = new Dictionary<string, Patient>();
+        private Dictionary<string, List<Patient>> dMap = new Dictionary<string, List<Patient>>();
+        private Dictionary<string, Doctor> pMap = new Dictionary<string, Doctor>(); 
 
-        public VaccDb()
+
+        public void AddDoctor(Doctor d)
         {
-            patientsByName = new Dictionary<string, Doctor>();
-            doctorsByName = new Dictionary<string, List<Patient>>();
-            doctors = new HashSet<Doctor>();
+            if (this.doctors.ContainsKey(d.Name))
+            {
+                throw new ArgumentException();
+            }
+
+            this.doctors.Add(d.Name, d);
+            this.dMap.Add(d.Name, new List<Patient>());
         }
 
-        public void AddDoctor(Doctor doctor)
+        public void AddPatient(Doctor d, Patient p)
         {
-            if (this.doctorsByName.ContainsKey(doctor.Name))
+            if (!this.doctors.ContainsKey(d.Name))
             {
                 throw new ArgumentException();
             }
 
-            this.doctorsByName.Add(doctor.Name, new List<Patient>());
-            doctors.Add(doctor);
+            patients.Add(p.Name, p);
+            dMap[d.Name].Add(p);
+            pMap.Add(p.Name, d);
         }
 
-        public void AddPatient(Doctor doctor, Patient patient)
-        {
-            if (!this.doctorsByName.ContainsKey(doctor.Name))
-            {
-                throw new ArgumentException();
-            }
+        public IEnumerable<Doctor> GetDoctors() => doctors.Values;
 
-            patientsByName.Add(patient.Name, doctor);
-            doctorsByName[doctor.Name].Add(patient);
-            doctor.Patients.Add(patient);
-        }
+        public IEnumerable<Patient> GetPatients() => this.patients.Values;
 
-        public void ChangeDoctor(Doctor oldDoctor, Doctor newDoctor, Patient patient)
-        {
-            if (!this.doctorsByName.ContainsKey(oldDoctor.Name))
-            {
-                throw new ArgumentException();
-            }
-            if (!this.doctorsByName.ContainsKey(newDoctor.Name))
-            {
-                throw new ArgumentException();
-            }
-            if (!patientsByName.ContainsKey(patient.Name))
-            {
-                throw new ArgumentException();
-            }
+        public bool Exist(Doctor d) => this.doctors.ContainsKey(d.Name);
 
-            doctorsByName[oldDoctor.Name].Remove(patient);
-            doctorsByName[newDoctor.Name].Add(patient);
-            patientsByName[patient.Name] = newDoctor;
-            oldDoctor.Patients.Remove(patient);
-            newDoctor.Patients.Add(patient);
-        }
-
-        public bool Exist(Doctor doctor)
-            => this.doctorsByName.ContainsKey(doctor.Name);
-
-        public bool Exist(Patient patient)
-            => this.patientsByName.ContainsKey(patient.Name);
-
-        public IEnumerable<Doctor> GetDoctors()
-            => this.doctorsByName.Keys;
-
-        public IEnumerable<Doctor> GetDoctorsByPopularity(int populariry)
-            => doctorPatients.Keys.Where(d => d.Popularity == populariry);
-
-        public IEnumerable<Doctor> GetDoctorsSortedByPatientsCountDescAndNameAsc()
-            => this.doctorPatients.OrderByDescending(kvp => kvp.Value.Count).ThenBy(kvp => kvp.Key.Name).ToDictionary(x => x.Key, x => x.Value).Keys;
-
-        public IEnumerable<Patient> GetPatients()
-            => this.patientDoctor.Keys;
-
-        public IEnumerable<Patient> GetPatientsByTown(string town)
-            => this.patientDoctor.Keys.Where(p => p.Town == town);
-
-        public IEnumerable<Patient> GetPatientsInAgeRange(int lo, int hi)
-            => this.patientDoctor.Keys.Where(p => p.Age >= lo && p.Age <= hi);
-
-        public IEnumerable<Patient> GetPatientsSortedByDoctorsPopularityAscThenByHeightDescThenByAge()
-            => this.patientDoctor.OrderBy(p => p.Value.Popularity).ThenByDescending(p => p.Key.Height).ThenBy(p => p.Key.Age).ToDictionary(x => x.Key, x => x.Value).Keys;
+        public bool Exist(Patient p) => this.patients.ContainsKey(p.Name);
 
         public Doctor RemoveDoctor(string name)
         {
-            if (!this.doctorPatients.Keys.Any(d => d.Name == name))
+            if (this._doctors.ContainsKey(name) == false) throw new ArgumentException();
+
+            var removedDoctor = this._doctors[name];
+            var patientsToRemove = this._dMap[name];
+
+            this._doctors.Remove(name);
+            this._dMap.Remove(name);
+            foreach (var p in patientsToRemove)
             {
-                throw new ArgumentException();
+                this._patients.Remove(p);
+                this._pMap.Remove(p);
             }
 
-            var doctor = this.doctorPatients.Keys.First(d => d.Name == name);
-            var patientsToRemove = doctorPatients[doctor];
-
-            doctorPatients.Remove(doctor);
-            foreach (var patient in patientsToRemove)
-            {
-                patientDoctor.Remove(patient);
-            }
-
-            return doctor;
+            return removedDoctor;
         }
+
+        public void ChangeDoctor(Doctor from, Doctor to, Patient p)
+        {
+            if (this.Exist(from) == false || this.Exist(to) == false || this.Exist(p) == false) throw new ArgumentException();
+            this._dMap[from.Name].Remove(p.Name);
+            this._dMap[to.Name].Add(p.Name);
+            this._pMap[p.Name] = to.Name;
+        }
+
+        public IEnumerable<Doctor> GetDoctorsByPopularity(int populariry) => this.GetDoctors().Where(d => d.Popularity == populariry);
+
+        public IEnumerable<Patient> GetPatientsByTown(string town) => this.GetPatients().Where(p => p.Town == town);
+
+        public IEnumerable<Patient> GetPatientsInAgeRange(int lo, int hi) => this.GetPatients().Where(p => lo <= p.Age && p.Age <= hi);
+
+        public IEnumerable<Doctor> GetDoctorsSortedByPatientsCountDescAndNameAsc() => this.GetDoctors().OrderByDescending(d => this._dMap[d.Name].Count).ThenBy(d => d.Name);
+
+        public IEnumerable<Patient> GetPatientsSortedByDoctorsPopularityAscThenByHeightDescThenByAge() => this.GetPatients().OrderBy(p => this._doctors[this._pMap[p.Name]].Popularity).ThenByDescending(p => p.Height).ThenBy(p => p.Age);
     }
 }
