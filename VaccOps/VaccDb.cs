@@ -8,72 +8,70 @@
 
     public class VaccDb : IVaccOps
     {
-        Dictionary<Patient, Doctor> patientDoctor;
-        Dictionary<Doctor, List<Patient>> doctorPatients;
+        Dictionary<string, Doctor> patientsByName;
+        Dictionary<string, List<Patient>> doctorsByName;
+        HashSet<Doctor> doctors;
 
         public VaccDb()
         {
-            //doctors = new HashSet<Doctor>();
-            //patients = new HashSet<Patient>();
-            patientDoctor = new Dictionary<Patient, Doctor>();
-            doctorPatients = new Dictionary<Doctor, List<Patient>>();
+            patientsByName = new Dictionary<string, Doctor>();
+            doctorsByName = new Dictionary<string, List<Patient>>();
+            doctors = new HashSet<Doctor>();
         }
 
         public void AddDoctor(Doctor doctor)
         {
-            if (this.doctorPatients.ContainsKey(doctor))
+            if (this.doctorsByName.ContainsKey(doctor.Name))
             {
                 throw new ArgumentException();
             }
 
-            //this.doctors.Add(doctor);
-            this.doctorPatients.Add(doctor, new List<Patient>());
+            this.doctorsByName.Add(doctor.Name, new List<Patient>());
+            doctors.Add(doctor);
         }
 
         public void AddPatient(Doctor doctor, Patient patient)
         {
-            if (!this.doctorPatients.ContainsKey(doctor))
+            if (!this.doctorsByName.ContainsKey(doctor.Name))
             {
                 throw new ArgumentException();
             }
 
-            patientDoctor.Add(patient, doctor);
-            doctorPatients[doctor].Add(patient);
+            patientsByName.Add(patient.Name, doctor);
+            doctorsByName[doctor.Name].Add(patient);
+            doctor.Patients.Add(patient);
         }
 
         public void ChangeDoctor(Doctor oldDoctor, Doctor newDoctor, Patient patient)
         {
-            if (!this.doctorPatients.ContainsKey(oldDoctor))
+            if (!this.doctorsByName.ContainsKey(oldDoctor.Name))
             {
                 throw new ArgumentException();
             }
-            if (!this.doctorPatients.ContainsKey(newDoctor))
+            if (!this.doctorsByName.ContainsKey(newDoctor.Name))
             {
                 throw new ArgumentException();
             }
-            //if (!this.patients.Contains(patient))
-            //{
-            //    throw new ArgumentException();
-            //}
-            if (!patientDoctor.ContainsKey(patient))
+            if (!patientsByName.ContainsKey(patient.Name))
             {
                 throw new ArgumentException();
             }
 
-            //var patientsToMove = oldDoctor.Patients;
-            doctorPatients[oldDoctor].Remove(patient);
-            doctorPatients[newDoctor].Add(patient);
-            patientDoctor[patient] = newDoctor;
+            doctorsByName[oldDoctor.Name].Remove(patient);
+            doctorsByName[newDoctor.Name].Add(patient);
+            patientsByName[patient.Name] = newDoctor;
+            oldDoctor.Patients.Remove(patient);
+            newDoctor.Patients.Add(patient);
         }
 
         public bool Exist(Doctor doctor)
-            => this.doctorPatients.ContainsKey(doctor);
+            => this.doctorsByName.ContainsKey(doctor.Name);
 
         public bool Exist(Patient patient)
-            => this.patientDoctor.ContainsKey(patient);
+            => this.patientsByName.ContainsKey(patient.Name);
 
         public IEnumerable<Doctor> GetDoctors()
-            => this.doctorPatients.Keys;
+            => this.doctorsByName.Keys;
 
         public IEnumerable<Doctor> GetDoctorsByPopularity(int populariry)
             => doctorPatients.Keys.Where(d => d.Popularity == populariry);
@@ -102,11 +100,6 @@
 
             var doctor = this.doctorPatients.Keys.First(d => d.Name == name);
             var patientsToRemove = doctorPatients[doctor];
-            //this.doctors.Remove(doctor);
-            //foreach (var patient in patientsToRemove)
-            //{
-            //    patients.Remove(patient);
-            //}
 
             doctorPatients.Remove(doctor);
             foreach (var patient in patientsToRemove)
