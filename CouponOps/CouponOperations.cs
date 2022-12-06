@@ -49,22 +49,57 @@
 
         public void RegisterSite(Website website)
         {
-            throw new NotImplementedException();
+            if (websitesByDomains.ContainsKey(website.Domain))
+            {
+                throw new ArgumentException();
+            }
+
+            websitesByDomains.Add(website.Domain, website);
         }
 
         public Coupon RemoveCoupon(string code)
         {
-            throw new NotImplementedException();
+            if (!couponesByCodes.ContainsKey(code))
+            {
+                throw new ArgumentException();
+            }
+
+            var coupon = couponesByCodes[code];
+            couponesByCodes.Remove(code);
+            foreach (var website in websitesByDomains.Values)
+            {
+                website.Coupons.Remove(coupon);
+            }
+
+            return coupon;
         }
 
         public Website RemoveWebsite(string domain)
         {
-            throw new NotImplementedException();
+            if (!websitesByDomains.ContainsKey(domain))
+            {
+                throw new ArgumentException();
+            }
+
+            var website = websitesByDomains[domain];
+            websitesByDomains.Remove(domain);
+
+            return website;
         }
 
         public void UseCoupon(Website website, Coupon coupon)
         {
-            throw new NotImplementedException();
+            if (!websitesByDomains.ContainsKey(website.Domain) || !couponesByCodes.ContainsKey(coupon.Code))
+            {
+                throw new ArgumentException();
+            }
+            if (!website.Coupons.Contains(coupon))
+            {
+                throw new ArgumentException();
+            }
+
+            website.Coupons.Remove(coupon);
+            couponesByCodes.Remove(coupon.Code);
         }
     }
 }
