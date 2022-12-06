@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using CouponOps.Models;
     using Interfaces;
 
@@ -34,23 +35,17 @@
                 throw new ArgumentException();
             }
 
-
+            return website.Coupons;
         }
 
         public IEnumerable<Coupon> GetCouponsOrderedByValidityDescAndDiscountPercentageDesc()
-        {
-            throw new NotImplementedException();
-        }
+            => couponesByCodes.Values.OrderByDescending(c => c.Validity).ThenByDescending(c => c.DiscountPercentage);
 
         public IEnumerable<Website> GetSites()
-        {
-            throw new NotImplementedException();
-        }
+            => websitesByDomains.Values;
 
         public IEnumerable<Website> GetWebsitesOrderedByUserCountAndCouponsCountDesc()
-        {
-            throw new NotImplementedException();
-        }
+            => websitesByDomains.Values.OrderByDescending(w => w.UsersCount).ThenByDescending(w => w.Coupons.Count);
 
         public void RegisterSite(Website website)
         {
