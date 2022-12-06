@@ -7,20 +7,24 @@
 
     public class CouponOperations : ICouponOperations
     {
+        private Dictionary<string, Coupon> couponesByCodes = new Dictionary<string, Coupon>();
+        private Dictionary<string, Website> websitesByDomains = new Dictionary<string, Website>();
+
         public void AddCoupon(Website website, Coupon coupon)
         {
-            throw new NotImplementedException();
+            if (!this.websitesByDomains.ContainsKey(website.Domain))
+            {
+                throw new ArgumentException();
+            }
+
+            websitesByDomains.Add(website.Domain, website);
         }
 
         public bool Exist(Website website)
-        {
-            throw new NotImplementedException();
-        }
+            => this.websitesByDomains.ContainsKey(website.Domain);
 
         public bool Exist(Coupon coupon)
-        {
-            throw new NotImplementedException();
-        }
+            => this.couponesByCodes.ContainsKey(coupon.Code);
 
         public IEnumerable<Coupon> GetCouponsForWebsite(Website website)
         {
