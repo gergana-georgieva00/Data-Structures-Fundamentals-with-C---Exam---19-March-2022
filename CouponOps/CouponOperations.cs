@@ -18,6 +18,7 @@
             }
 
             websitesByDomains.Add(website.Domain, website);
+            website.Coupons.Add(coupon);
         }
 
         public bool Exist(Website website)
@@ -28,7 +29,12 @@
 
         public IEnumerable<Coupon> GetCouponsForWebsite(Website website)
         {
-            throw new NotImplementedException();
+            if (!websitesByDomains.ContainsKey(website.Domain));
+            {
+                throw new ArgumentException();
+            }
+
+
         }
 
         public IEnumerable<Coupon> GetCouponsOrderedByValidityDescAndDiscountPercentageDesc()
