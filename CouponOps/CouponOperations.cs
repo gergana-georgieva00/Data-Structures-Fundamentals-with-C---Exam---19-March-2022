@@ -18,8 +18,8 @@
                 throw new ArgumentException();
             }
 
-            websitesByDomains.Add(website.Domain, website);
             website.Coupons.Add(coupon);
+            couponesByCodes.Add(coupon.Code, coupon);
         }
 
         public bool Exist(Website website)
@@ -30,7 +30,7 @@
 
         public IEnumerable<Coupon> GetCouponsForWebsite(Website website)
         {
-            if (!websitesByDomains.ContainsKey(website.Domain));
+            if (!websitesByDomains.ContainsKey(website.Domain))
             {
                 throw new ArgumentException();
             }
@@ -45,7 +45,7 @@
             => websitesByDomains.Values;
 
         public IEnumerable<Website> GetWebsitesOrderedByUserCountAndCouponsCountDesc()
-            => websitesByDomains.Values.OrderByDescending(w => w.UsersCount).ThenByDescending(w => w.Coupons.Count);
+            => websitesByDomains.Values.OrderBy(w => w.UsersCount).ThenByDescending(w => w.Coupons.Count);
 
         public void RegisterSite(Website website)
         {
